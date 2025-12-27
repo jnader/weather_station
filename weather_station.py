@@ -3,11 +3,10 @@ A useful library for handling weather data using Open Weather API.
 """
 
 import attrs
-import datetime
 import logging
 import requests
-from typing import Optional
-from weather import Weather
+from typing import Iterable, Optional
+from weather import City, Weather
 
 
 @attrs.define()
@@ -21,7 +20,7 @@ class WeatherStation:
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     logger: logging.Logger = None
-    weather_data: Weather = Weather()
+    weather_data: Iterable[Weather] = []
 
     def set_open_weather_api_key(self, open_weather_api_key: str) -> None:
         """Set Open Weather API key
@@ -68,5 +67,39 @@ class WeatherStation:
             self.logger.error(f"Status code: {r.status_code}")
             return False
 
-        self.weather_data = Weather.from_dict(r.json())
+        self.weather_data.append(Weather.from_dict(r.json()))
+        return True
+
+    def get_5_day_3_hour_forecast_data(
+        self, latitude: float = None, longitude: float = None, step_count: int = 15
+    ) -> bool:
+        """Get 5 day weather forecast with 3-hour step.
+
+        Args:
+            latitude (float, optional): Latitude. Defaults to None.
+            longitude (float, optional): Longitude. Defaults to None.
+            step_count (int, optional): Steps count. Defaults to 96.
+
+        Returns:
+            bool: True if ok, False otherwise
+        """
+        self.logger.info(f"Get {step_count} 3-hour forecast")
+        requested_latitude = latitude if latitude else self.latitude
+        request_longitude = longitude if longitude else self.longitude
+
+        api_call = f"https://api.openweathermap.org/data/2.5/forecast?lat={requested_latitude}&lon={request_longitude}&appid={self.open_weather_api_key}"
+        if step_count:
+            api_call += f"&cnt={step_count}"
+
+        r = requests.get(api_call)
+        if r.status_code != 200:
+            self.logger.error(f"Status code: {r.status_code}")
+            return False
+
+        data = r.json()
+        city = City.from_dict(data.get("city"))
+        for list_row in data["list"]:
+            row = Weather.from_dict(list_row)
+            row.city = city
+            self.weather_data.append(row)
         return True

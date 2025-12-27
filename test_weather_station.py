@@ -39,6 +39,11 @@ def main():
             logger.error("Exiting...")
             exit(1)
 
+        ret = station.get_5_day_3_hour_forecast_data(step_count=3)
+        if not ret:
+            logger.error("Failed to retrieve weather forecast...")
+            logger.error("Exiting...")
+
         logger.info("Success!")
         logger.info(f"Current weather data: {station.weather_data}")
 
