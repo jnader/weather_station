@@ -2,10 +2,12 @@
 A useful library for handling weather data using Open Weather API.
 """
 
-import attrs
+import datetime
 import logging
-import requests
 from typing import Iterable, Optional
+
+import attrs
+import requests
 from weather import City, Weather
 
 
@@ -60,14 +62,16 @@ class WeatherStation:
         requested_latitude = latitude if latitude else self.latitude
         request_longitude = longitude if longitude else self.longitude
 
-        api_call = f"https://api.openweathermap.org/data/2.5/weather?lat={requested_latitude}&lon={request_longitude}&appid={self.open_weather_api_key}"
+        api_call = "https://api.openweathermap.org/data/2.5/weather?"
+        api_call += f"lat={requested_latitude}&lon={request_longitude}"
+        api_call += f"&appid={self.open_weather_api_key}"
 
-        r = requests.get(api_call)
-        if r.status_code != 200:
-            self.logger.error(f"Status code: {r.status_code}")
+        response = requests.get(api_call)
+        if response.status_code != 200:
+            self.logger.error(f"Status code: {response.status_code}")
             return False
 
-        self.weather_data.append(Weather.from_dict(r.json()))
+        self.weather_data.append(Weather.from_dict(response.json()))
         return True
 
     def get_5_day_3_hour_forecast_data(
@@ -87,16 +91,18 @@ class WeatherStation:
         requested_latitude = latitude if latitude else self.latitude
         request_longitude = longitude if longitude else self.longitude
 
-        api_call = f"https://api.openweathermap.org/data/2.5/forecast?lat={requested_latitude}&lon={request_longitude}&appid={self.open_weather_api_key}"
+        api_call = "https://api.openweathermap.org/data/2.5/forecast?"
+        api_call += f"lat={requested_latitude}&lon={request_longitude}"
+        api_call += f"&appid={self.open_weather_api_key}"
         if step_count:
             api_call += f"&cnt={step_count}"
 
-        r = requests.get(api_call)
-        if r.status_code != 200:
-            self.logger.error(f"Status code: {r.status_code}")
+        response = requests.get(api_call)
+        if response.status_code != 200:
+            self.logger.error(f"Status code: {response.status_code}")
             return False
 
-        data = r.json()
+        data = response.json()
         city = City.from_dict(data.get("city"))
         for list_row in data["list"]:
             row = Weather.from_dict(list_row)
