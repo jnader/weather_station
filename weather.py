@@ -253,6 +253,7 @@ class Weather:
             weather_data=WeatherMainData.from_dict(data.get("main", None)),
             wind=Wind.from_dict(data.get("wind", None)),
             visibility=data.get("visibility", None),
+            pop=data.get("pop", None),
             clouds=Cloud.from_dict(data.get("clouds", None)),
             rain=Precipitation(data.get("rain", None)),
             snow=Precipitation(data.get("snow", None)),
